@@ -1,6 +1,7 @@
 package studio.brunocasamassa.myapplication.activities;
 
 import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 
@@ -8,6 +9,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import studio.brunocasamassa.myapplication.R;
 import studio.brunocasamassa.myapplication.adapters.MoviesTabAdapter;
+import studio.brunocasamassa.myapplication.fragments.FragmentAllMoviesList;
 import studio.brunocasamassa.myapplication.utils.SlidingTabLayout;
 
 public class MainActivity extends AppCompatActivity {
@@ -44,5 +46,15 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+    }
+
+
+    //UNIT TEST
+    public int verifyTestRequestHttp() {
+
+        FragmentManager fm = getSupportFragmentManager();
+        FragmentAllMoviesList fragment = (FragmentAllMoviesList) fm.findFragmentByTag("allMovies");
+
+        return fragment.getHttpCodeStatus();
     }
 }

@@ -8,15 +8,16 @@ import studio.brunocasamassa.myapplication.fragments.FragmentAllMoviesList;
 import studio.brunocasamassa.myapplication.fragments.FragmentFavsMoviesList;
 
 /**
- * Created by bruno on 17/04/2018.
+ * Created by bruno on 18/04/2018.
  */
 
 public class MoviesTabAdapter  extends FragmentStatePagerAdapter {
 
-    private String[] tituloAbas = {" A L L  M O V I E S ", " F A V O R I T E S "};
+    private String[] tituloAbas = {"       A L L  M O V I E S       ", "       F A V O R I T E S       "};
 
     public MoviesTabAdapter(FragmentManager fm) {
         super(fm);
+        fm.beginTransaction().add(getItem(0),"allMovies").commit();
     }
 
     @Override

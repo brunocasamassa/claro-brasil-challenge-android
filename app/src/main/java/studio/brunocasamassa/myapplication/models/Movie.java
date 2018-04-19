@@ -10,6 +10,14 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Created by bruno on 18/04/2018.
+ *
+ *
+ *
+ */
+
+
 public class Movie implements Serializable {
 
     @SerializedName("vote_count")
@@ -95,6 +103,26 @@ public class Movie implements Serializable {
         this.overview = overview;
         this.releaseDate = releaseDate;
     }
+
+
+    public Movie(Bundle extras) {
+
+        this.voteCount = extras.getInt("voteCount");
+        this.id = extras.getInt("id");
+        this.video = extras.getBoolean("video");
+        this.voteAverage = extras.getDouble("voteAverage");
+        this.title = extras.getString("title");
+        this.popularity = extras.getDouble("popularity");
+        this.posterPath = extras.getString("posterPath");
+        this.originalLanguage = extras.getString("originaLanguage");
+        this.originalTitle = extras.getString("originalTitle");
+        this.genreIds = extras.getIntegerArrayList("genreIds");
+        this.backdropPath = extras.getString("backdropPath");
+        this.adult = extras.getBoolean("adult");
+        this.overview = extras.getString("overview");
+        this.releaseDate = extras.getString("releaseDate");
+    }
+
 
     public Integer getVoteCount() {
         return voteCount;
@@ -220,6 +248,7 @@ public class Movie implements Serializable {
         bundle.putString("title", this.getTitle());
         bundle.putDouble("popularity", this.getPopularity());
         bundle.putString("posterPath", this.getPosterPath());
+        bundle.putString("originaLanguage", this.getOriginalLanguage());
         bundle.putString("originalTitle", this.getOriginalTitle());
         bundle.putIntegerArrayList("genreIds", (ArrayList<Integer>) this.getGenreIds());
         bundle.putString("backdropPath", this.getBackdropPath());
