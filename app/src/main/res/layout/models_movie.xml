@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/list_item"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="?attr/selectableItemBackgroundBorderless"
+    android:clickable="true"
+    >
+
+    <ImageView
+        android:id="@+id/squareImageView"
+        android:layout_width="150dp"
+        android:layout_height="190dp"
+        android:adjustViewBounds="true"
+        android:cropToPadding="false"
+        android:scaleType="centerCrop"
+        android:src="@color/colorAccent"
+         />
+
+    <TextView
+        android:id="@+id/txtTitle"
+        style="@style/TextAppearance.AppCompat.Body2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/movieRating"
+        android:ellipsize="end"
+        android:maxLines="1"
+        tools:text="TextView" />
+
+    <TextView
+        android:id="@+id/txtDate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/txtTitle"
+        tools:text="TextView" />
+
+    <RatingBar
+        android:id="@+id/movieRating"
+        style="@style/Base.Widget.AppCompat.RatingBar.Small"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/squareImageView"
+        android:layout_marginTop="@dimen/movie_card_insets"
+        android:max="10"
+        tools:rating="2.5" />
+
+
+</RelativeLayout>
