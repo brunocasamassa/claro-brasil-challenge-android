@@ -7,11 +7,21 @@
     android:background="@color/colorBackground"
     tools:context=".activities.MovieActivity">
 
+    <VideoView
+        android:id="@+id/videoView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/colorBackground"
+        />
+
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:fitsSystemWindows="true"
         android:theme="@style/AppTheme.AppBarOverlay">
+
+
+
 
         <android.support.design.widget.CollapsingToolbarLayout
             android:layout_width="match_parent"
@@ -36,6 +46,7 @@
                 android:id="@+id/play_button"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
+                android:visibility="gone"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_play_circle_outline_black_24dp"
                 />
