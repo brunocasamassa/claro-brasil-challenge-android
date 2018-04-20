@@ -90,8 +90,27 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieHolder> {
                             }
                         }).show();
 
-                    } else
+                    } else if (cameFrom.equals("FAVORITES")) {
                         Toast.makeText(context, "Filme já favoritado", Toast.LENGTH_SHORT).show();
+
+                        String movieName = movieList.get(position).getTitle();
+                        AlertDialog.Builder alert = new AlertDialog.Builder(context);
+                        alert.setTitle("Excluir Filme");
+                        alert.setTitle("Deseja excluir " + movieName + " da sua lista de favoritos?");
+                        alert.setPositiveButton("SIM", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                SessionManager session = new SessionManager(context);
+                                session.removeFavorites(movieList.get(position), context);
+
+                            }
+                        }).setNegativeButton("NÃO", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+
+                            }
+                        }).show();
+                    }
                     return false;
                 }
             });

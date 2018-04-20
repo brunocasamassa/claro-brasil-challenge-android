@@ -23,7 +23,7 @@
 
     </string>c
     <string name="image_base_url">http://image.tmdb.org/t/p/original</string>
-    <string name="video_base_url">https://www.youtube.com/watch?v=</string>
+    <string name="video_base_url">http://www.youtube.com/embed/</string>
     <string name="base_url">https://api.themoviedb.org/3/</string>
 
         <string-array name="genres_id">

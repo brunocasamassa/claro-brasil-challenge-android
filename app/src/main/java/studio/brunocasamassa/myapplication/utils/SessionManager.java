@@ -17,8 +17,6 @@ import studio.brunocasamassa.myapplication.models.Movie;
 
 /**
  * Created by bruno on 19/04/2018.
- *
- *
  */
 
 public class SessionManager {
@@ -44,18 +42,18 @@ public class SessionManager {
     }
 
 
-    public void updateFavorites(Movie movie,Activity activity) {
+    public void updateFavorites(Movie movie, Activity activity) {
 
         try {
 
             Gson gson = new Gson();
             String jsonMovie = gson.toJson(movie);
 
-            System.out.println("JSONMOVIE "+ jsonMovie);
+            System.out.println("JSONMOVIE " + jsonMovie);
 
             Set<String> stringSet = new HashSet<String>();
 
-            stringSet.addAll(pref.getStringSet(_MOVIELIST,stringSet));
+            stringSet.addAll(pref.getStringSet(_MOVIELIST, stringSet));
 
             stringSet.add(jsonMovie);
 
@@ -131,4 +129,33 @@ public class SessionManager {
     }
 
 
+    public void removeFavorites(Movie movie, Activity activity) {
+
+        ArrayList<Movie> arrayMovies = this.getMoviesDetails();
+        arrayMovies.remove(movie);
+
+        try {
+
+            Gson gson = new Gson();
+
+            Set<String> stringSet = pref.getStringSet(_MOVIELIST, null);
+
+            String movieString = gson.toJson(movie);
+            stringSet.remove(movieString);
+
+            editor.putStringSet(_MOVIELIST, stringSet);
+            editor.commit();
+
+            Toast.makeText(_context, "Filme deletado com sucesso", Toast.LENGTH_SHORT).show();
+            Tools.refreshAll(activity);
+
+        } catch (NullPointerException n) {
+            n.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(_context, "Erro ao favoritar filme", Toast.LENGTH_SHORT).show();
+            Log.e("ERROR SHARED ", e.getMessage());
+        }
+
+    }
 }

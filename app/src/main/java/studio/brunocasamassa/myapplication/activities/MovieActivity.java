@@ -1,23 +1,18 @@
 package studio.brunocasamassa.myapplication.activities;
 
-import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
-import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.MediaController;
 import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.VideoView;
 
 import com.squareup.picasso.Picasso;
 
@@ -39,8 +34,7 @@ import studio.brunocasamassa.myapplication.service.MoviedbResponse;
 public class MovieActivity extends AppCompatActivity {
 
 
-    @BindView(R.id.videoView)
-    VideoView videoVIew;
+
     @BindView(R.id.txtOriginalTitle)
     TextView txtOriginalTitle;
     @BindView(R.id.movieRating)
@@ -116,7 +110,6 @@ public class MovieActivity extends AppCompatActivity {
 
                 try {
 
-                    Log.d("RESPON", response.headers().toMultimap().toString());
 
                     if (response.isSuccessful()) {
                         Trailer trailers = response.body();
@@ -130,7 +123,7 @@ public class MovieActivity extends AppCompatActivity {
                                 playButton.setOnClickListener(new View.OnClickListener() {
                                     @Override
                                     public void onClick(View view) {
-                                        playTrailer(videoVIew, getResources().getString(R.string.video_base_url), MovieActivity.this);
+                                        playTrailer( getResources().getString(R.string.video_base_url) + trailer.getKey());
 
                                     }
                                 });
@@ -172,56 +165,25 @@ public class MovieActivity extends AppCompatActivity {
         MoviedbResponse service = retrofit.create(MoviedbResponse.class);
         return service;
 
-        // System.out.println("RSPON "+service.getMovieTrailers(base_url).execute().headers().);
     }
 
-    public void playTrailer(VideoView videoVIew, String uri, Activity activity) {
-        //VIDEO VIEW
-        try {
-            /*final ProgressBar progressBar = (ProgressBar) findViewById(R.id.progress_video);
-            Drawable draw = getResources().getDrawable(R.drawable.custom_progreesbar);
-            progressBar.setProgressDrawable(draw);
-*/
-            if (uri.equals("")) {
-
-                // progressBar.setVisibility(View.GONE);
-
-            } else {
-                final MediaController mediaControls;
-                mediaControls = new MediaController(activity);
-                mediaControls.setAnchorView(videoVIew);
-
-                videoVIew.setMediaController(mediaControls);
-                Uri path1 = Uri.parse(uri);
-                System.out.println("VIDEO LINK " + uri);
-
-                videoVIew.setVideoURI(path1);
-                videoVIew.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                    @Override
-                    public void onPrepared(MediaPlayer mp) {
-                        //mediaControls.setEnabled(true);
-                        //progressBar.setVisibility(View.GONE);
-                    }
-                });
+    public void playTrailer(String uri) {
 
 
-                DisplayMetrics metrics = new DisplayMetrics();
-                getWindowManager().getDefaultDisplay().getMetrics(metrics);
-                android.widget.LinearLayout.LayoutParams params = (android.widget.LinearLayout.LayoutParams) videoVIew.getLayoutParams();
-                params.width = metrics.widthPixels;
-                params.height = metrics.heightPixels;
-                params.leftMargin = 0;
-                videoVIew.setLayoutParams(params);
+        if (!uri.equals("")) {
 
-                videoVIew.start();
-                videoVIew.pause();
-            }
-        } catch (Exception e) {
-            System.out.println("ERROR VIDEO " + e.getMessage());
-            e.printStackTrace();
+            uri = uri + "?autoplay=1&vq=small";
+            Uri uri2 = Uri.parse(uri);
+            Intent intent = new Intent(Intent.ACTION_VIEW, uri2);
+            startActivity(intent);
         }
 
 
+
+
+        }
     }
 
-}
+
+
+
