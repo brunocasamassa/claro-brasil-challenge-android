@@ -17,9 +17,11 @@ import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import io.reactivex.Observable;
+import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import studio.brunocasamassa.myapplication.R;
@@ -50,7 +52,7 @@ public class FragmentAllMoviesList extends Fragment implements HttpRequestCode {
     @BindView(R.id.list_movies_all)
     RecyclerView viewMovies;
 
-    private Call<Results> results;
+    private Observable<Results> results;
     private ArrayList<Movie> moviesList;
     private MovieAdapter movieAdapter;
 
@@ -65,6 +67,8 @@ public class FragmentAllMoviesList extends Fragment implements HttpRequestCode {
 
         try {
             getRequest(getResources().getString(R.string.base_url), this);
+            // Observer observer =
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -75,19 +79,17 @@ public class FragmentAllMoviesList extends Fragment implements HttpRequestCode {
 
     private void getRequest(String string, final HttpRequestCode httpRequestCode) {
 
-        results = initRetrofit(string).listMovies();
+        Observer<Results> moviesReceiver = new Observer<Results>() {
+            @Override
+            public void onSubscribe(Disposable d) {
+                Log.d("Obsrever ENTERED", "true");
 
-        results.enqueue(new Callback<Results>() {
+            }
 
             @Override
-            public void onResponse(Call<Results> call, Response<Results> response) {
+            public void onNext(Results results) {
 
-                //receive httpRequestStatus interface
-                httpRequestCode.onReceiveRequestCode(response.code());
-
-                if (response.isSuccessful()) {
-                    Results results = response.body();
-                    Log.d("RESPONSE BODY: ", response.body().getResults().toArray().toString());
+                if (results != null) {
                     moviesList = new ArrayList<>();
 
                     for (final Movie movie : results.getResults()) {
@@ -103,19 +105,29 @@ public class FragmentAllMoviesList extends Fragment implements HttpRequestCode {
 
             }
 
-
             @Override
-            public void onFailure(Call<Results> call, Throwable t) {
-
-                String error = t.getMessage();
+            public void onError(Throwable e) {
+                String error = e.getMessage();
 
                 Toast.makeText(getActivity(), error, Toast.LENGTH_SHORT).show();
 
             }
 
-        });
+            @Override
+            public void onComplete() {
+
+            }
+        };
+
+        results = initRetrofit(string, httpRequestCode).listMoviesOb();
+
+        results.subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(moviesReceiver);
+
 
     }
+
 
     private void setMoviesList(ArrayList<Movie> moviesList) {
 
@@ -129,7 +141,7 @@ public class FragmentAllMoviesList extends Fragment implements HttpRequestCode {
     //USED IN UNIT TESTS
     public int getHttpCodeStatus() {
         try {
-            int status = initRetrofit(getResources().getString(R.string.base_url)).listMovies().execute().code();
+            int status = initRetrofit(getResources().getString(R.string.base_url), this).listMovies().execute().code();
             return status;
         } catch (IOException e) {
             e.printStackTrace();
@@ -137,15 +149,20 @@ public class FragmentAllMoviesList extends Fragment implements HttpRequestCode {
         return 0;
     }
 
-    private MoviedbResponse initRetrofit(String base_url) {
+    private MoviedbResponse initRetrofit(String base_url, HttpRequestCode httpRequestCode) {
 
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(base_url)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
+
         MoviedbResponse service = retrofit.create(MoviedbResponse.class);
+
+        httpRequestCode.onReceiveRequestCode(getHttpCodeStatus());
+
         return service;
+
     }
 
     @Override

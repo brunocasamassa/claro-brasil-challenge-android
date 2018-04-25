@@ -14,15 +14,6 @@ import studio.brunocasamassa.myapplication.utils.SlidingTabLayout;
 
 public class MainActivity extends AppCompatActivity {
 
-
-    //TODO : GET LAYOUT MOVIE ACTIVITY
-    //TODO : CREATE REQUEST MODELS
-    //TODO : CREATE RETROFIT REQUEST AND LOGICS
-
-
-    //TODO : IMPLEMENT ROBOELECTRIC AUTOMATION TEST
-
-
     @BindView(R.id.stl_tabs_palestras)
     SlidingTabLayout slidingTabLayout;
 
