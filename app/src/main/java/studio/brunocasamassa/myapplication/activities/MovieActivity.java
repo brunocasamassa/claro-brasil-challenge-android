@@ -178,9 +178,6 @@ public class MovieActivity extends AppCompatActivity {
             startActivity(intent);
         }
 
-
-
-
         }
     }
 

@@ -17,13 +17,13 @@ import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import io.reactivex.Observable;
-import io.reactivex.Observer;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+import rx.Observable;
+import rx.Observer;
+import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 import studio.brunocasamassa.myapplication.R;
 import studio.brunocasamassa.myapplication.adapters.MovieAdapter;
 import studio.brunocasamassa.myapplication.models.Movie;
@@ -79,12 +79,10 @@ public class FragmentAllMoviesList extends Fragment implements HttpRequestCode {
 
     private void getRequest(String string, final HttpRequestCode httpRequestCode) {
 
-        Observer<Results> moviesReceiver = new Observer<Results>() {
-            @Override
-            public void onSubscribe(Disposable d) {
-                Log.d("Obsrever ENTERED", "true");
+        httpRequestCode.onReceiveRequestCode(getHttpCodeStatus());
 
-            }
+        Observer<Results> moviesReceiver = new Observer<Results>() {
+
 
             @Override
             public void onNext(Results results) {
@@ -106,6 +104,11 @@ public class FragmentAllMoviesList extends Fragment implements HttpRequestCode {
             }
 
             @Override
+            public void onCompleted() {
+
+            }
+
+            @Override
             public void onError(Throwable e) {
                 String error = e.getMessage();
 
@@ -113,10 +116,7 @@ public class FragmentAllMoviesList extends Fragment implements HttpRequestCode {
 
             }
 
-            @Override
-            public void onComplete() {
 
-            }
         };
 
         results = initRetrofit(string, httpRequestCode).listMoviesOb();
@@ -125,6 +125,7 @@ public class FragmentAllMoviesList extends Fragment implements HttpRequestCode {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(moviesReceiver);
 
+        Subscription mySubscription = results.subscribe(moviesReceiver);
 
     }
 
@@ -159,7 +160,6 @@ public class FragmentAllMoviesList extends Fragment implements HttpRequestCode {
 
         MoviedbResponse service = retrofit.create(MoviedbResponse.class);
 
-        httpRequestCode.onReceiveRequestCode(getHttpCodeStatus());
 
         return service;
 

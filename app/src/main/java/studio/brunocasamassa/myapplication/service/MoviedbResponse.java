@@ -2,10 +2,10 @@ package studio.brunocasamassa.myapplication.service;
 
 import java.util.List;
 
-import io.reactivex.Observable;
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Path;
+import rx.Observable;
 import studio.brunocasamassa.myapplication.models.Movie;
 import studio.brunocasamassa.myapplication.models.Results;
 import studio.brunocasamassa.myapplication.models.Trailer;
