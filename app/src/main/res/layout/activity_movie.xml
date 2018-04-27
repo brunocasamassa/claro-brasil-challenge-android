@@ -22,15 +22,13 @@
         android:theme="@style/AppTheme.AppBarOverlay">
 
 
-
-
         <android.support.design.widget.CollapsingToolbarLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:contentScrim="@color/colorPrimary"
             app:layout_scrollFlags="scroll|enterAlwaysCollapsed"
             app:statusBarScrim="@color/colorPrimaryDark"
-            app:titleEnabled="false">
+            app:titleEnabled="true">
 
             <ImageView
                 android:id="@+id/squareImageView"
@@ -67,9 +65,8 @@
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
-        tools:context="com.rahul.movie.db.MovieDetailActivity">
+        >
 
         <RelativeLayout
             android:layout_width="match_parent"

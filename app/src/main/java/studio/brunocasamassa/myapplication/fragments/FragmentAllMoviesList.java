@@ -1,11 +1,11 @@
 package studio.brunocasamassa.myapplication.fragments;
 
-import android.content.Context;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,15 +13,15 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import retrofit2.Retrofit;
+import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 import rx.Observable;
-import rx.Observer;
-import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 import studio.brunocasamassa.myapplication.R;
@@ -30,6 +30,7 @@ import studio.brunocasamassa.myapplication.models.Movie;
 import studio.brunocasamassa.myapplication.models.Results;
 import studio.brunocasamassa.myapplication.service.HttpRequestCode;
 import studio.brunocasamassa.myapplication.service.MoviedbResponse;
+import studio.brunocasamassa.myapplication.utils.Tools;
 
 /**
  * Created by bruno on 17/04/2018.
@@ -38,16 +39,22 @@ import studio.brunocasamassa.myapplication.service.MoviedbResponse;
 public class FragmentAllMoviesList extends Fragment implements HttpRequestCode {
 
     @Override
-    public void onInflate(Context context, AttributeSet attrs, Bundle savedInstanceState) {
-        super.onInflate(context, attrs, savedInstanceState);
-
-    }
-
-    @Override
     public void onResume() {
         super.onResume();
 
+        //verify connection and request
+        if (!Tools.verifyStatusConnection(getActivity())) {
+            Toast.makeText(getActivity(), "Sem conexão com a internet", Toast.LENGTH_SHORT).show();
+        } else {
+            try {
+                getRequest(getResources().getString(R.string.base_url));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
     }
+
 
     @BindView(R.id.list_movies_all)
     RecyclerView viewMovies;
@@ -65,68 +72,45 @@ public class FragmentAllMoviesList extends Fragment implements HttpRequestCode {
         GridLayoutManager layoutManager = new GridLayoutManager(getActivity(), 2);
         viewMovies.setLayoutManager(layoutManager);
 
-        try {
-            getRequest(getResources().getString(R.string.base_url), this);
-            // Observer observer =
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
 
 
         return v;
     }
 
-    private void getRequest(String string, final HttpRequestCode httpRequestCode) {
 
-        httpRequestCode.onReceiveRequestCode(getHttpCodeStatus());
+    private void getRequest(String string) {
 
-        Observer<Results> moviesReceiver = new Observer<Results>() {
+        MoviedbResponse moviedbResponse = initRetrofit(string);
 
-
-            @Override
-            public void onNext(Results results) {
-
-                if (results != null) {
-                    moviesList = new ArrayList<>();
-
-                    for (final Movie movie : results.getResults()) {
-                        Log.d("MOVIE IN ARRAY: ", movie.getTitle());
-
-                        moviesList.add(movie);
-
-                        setMoviesList(moviesList);
-
-                    }
-
-                }
-
-            }
-
-            @Override
-            public void onCompleted() {
-
-            }
-
-            @Override
-            public void onError(Throwable e) {
-                String error = e.getMessage();
-
-                Toast.makeText(getActivity(), error, Toast.LENGTH_SHORT).show();
-
-            }
-
-
-        };
-
-        results = initRetrofit(string, httpRequestCode).listMoviesOb();
+        results = moviedbResponse.listMoviesOb();
 
         results.subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(moviesReceiver);
+                .subscribe(results -> {
 
-        Subscription mySubscription = results.subscribe(moviesReceiver);
+                    if (results != null) {
+                        moviesList = new ArrayList<>();
 
+                        for (Movie movie : results.getResults()) {
+                            Log.d("MOVIE IN ARRAY: ", movie.getTitle());
+
+                            moviesList.add(movie);
+
+                            setMoviesList(moviesList);
+
+                        }
+                    }
+                    ;
+                });
+
+        results.doOnError(throwable -> {
+
+                VerifyRequestStatus verifyRequestStatus = new VerifyRequestStatus(getActivity(), moviedbResponse);
+                verifyRequestStatus.execute();
+
+        });
+
+        return;
     }
 
 
@@ -142,7 +126,7 @@ public class FragmentAllMoviesList extends Fragment implements HttpRequestCode {
     //USED IN UNIT TESTS
     public int getHttpCodeStatus() {
         try {
-            int status = initRetrofit(getResources().getString(R.string.base_url), this).listMovies().execute().code();
+            int status = initRetrofit(getResources().getString(R.string.base_url)).listMovies().execute().code();
             return status;
         } catch (IOException e) {
             e.printStackTrace();
@@ -150,16 +134,16 @@ public class FragmentAllMoviesList extends Fragment implements HttpRequestCode {
         return 0;
     }
 
-    private MoviedbResponse initRetrofit(String base_url, HttpRequestCode httpRequestCode) {
+    private MoviedbResponse initRetrofit(String base_url) {
 
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(base_url)
+                .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
 
         MoviedbResponse service = retrofit.create(MoviedbResponse.class);
-
 
         return service;
 
@@ -168,6 +152,45 @@ public class FragmentAllMoviesList extends Fragment implements HttpRequestCode {
     @Override
     public void onReceiveRequestCode(int httpRequestCode) {
 
+
+    }
+}
+
+class VerifyRequestStatus extends AsyncTask<String, Integer, String> implements HttpRequestCode {
+
+    private FragmentActivity context;
+    private MoviedbResponse moviedbResponse;
+
+    public VerifyRequestStatus(FragmentActivity activity, MoviedbResponse moviedbResponse) {
+        this.context = activity;
+        this.moviedbResponse = moviedbResponse;
+    }
+
+
+    @Override
+    protected void onPreExecute() {
+        super.onPreExecute();
+    }
+
+    @Override
+    protected String doInBackground(String... strings) {
+
+        try {
+            int httpStatus = moviedbResponse.listMovies().execute().code();
+            this.onReceiveRequestCode(httpStatus);
+        } catch (UnknownHostException u) {
+            u.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (Exception ee) {
+            ee.printStackTrace();
+        }
+
+        return null;
+    }
+
+    @Override
+    public void onReceiveRequestCode(int httpRequestCode) {
         Log.d("HTTP STATUS CODE: ", String.valueOf(httpRequestCode));
 
         int HTTP_OK = 200;
@@ -187,7 +210,7 @@ public class FragmentAllMoviesList extends Fragment implements HttpRequestCode {
                     error = "Servidor em manutenção";
                 default:
 
-                    Toast.makeText(getActivity(), error, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, error, Toast.LENGTH_SHORT).show();
             }
 
         }

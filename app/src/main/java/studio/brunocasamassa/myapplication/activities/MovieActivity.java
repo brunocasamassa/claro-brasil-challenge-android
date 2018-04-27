@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.RatingBar;
@@ -16,23 +17,22 @@ import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
-import java.util.ArrayList;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 import retrofit2.Retrofit;
+import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
+import rx.Observable;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 import studio.brunocasamassa.myapplication.R;
 import studio.brunocasamassa.myapplication.models.Movie;
 import studio.brunocasamassa.myapplication.models.Result;
 import studio.brunocasamassa.myapplication.models.Trailer;
 import studio.brunocasamassa.myapplication.service.MoviedbResponse;
+import studio.brunocasamassa.myapplication.utils.Tools;
 
 public class MovieActivity extends AppCompatActivity {
-
 
 
     @BindView(R.id.txtOriginalTitle)
@@ -51,11 +51,9 @@ public class MovieActivity extends AppCompatActivity {
     ImageView playButton;
 
 
-    private Call<Trailer> responseTrailers;
-    private ArrayList<Movie> moviesList;
+    private Observable<Trailer> responseTrailers;
     private Movie movie;
-    private boolean hasTrailer;
-    private String uri;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,34 +65,38 @@ public class MovieActivity extends AppCompatActivity {
 
         movie = new Movie(extras);
 
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setTitle(movie.getTitle());
-        getSupportActionBar().setHomeButtonEnabled(true);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
+        setToolbar();
 
+        //SET VIEW
         txtOriginalTitle.setText(movie.getTitle());
         movieRating.setProgress(movie.getVoteAverage().intValue());
         Drawable progress = movieRating.getProgressDrawable();
         DrawableCompat.setTint(progress, Color.YELLOW);
-
         txtDate.setText(movie.getReleaseDate());
         txtDescription.setText(movie.getOverview());
 
         Picasso.with(getApplicationContext()).load(getResources().getString(R.string.image_base_url) + movie.getPosterPath()).fit().into(squareImageView);
 
+        if (!Tools.verifyStatusConnection(getApplicationContext())) {
+            Toast.makeText(MovieActivity.this, "Sem conexão com a internet", Toast.LENGTH_SHORT).show();
+        } else {
 
         try {
             getRequest(getResources().getString(R.string.base_url));
         } catch (Exception e) {
             e.printStackTrace();
-        }
+        }}
 
+
+    }
+
+    private void setToolbar() {
+
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setTitle(movie.getTitle());
+        getSupportActionBar().setHomeButtonEnabled(true);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        toolbar.setNavigationOnClickListener(v -> finish());
 
     }
 
@@ -102,28 +104,18 @@ public class MovieActivity extends AppCompatActivity {
 
         responseTrailers = initRetrofit(string).getMovieTrailers(String.valueOf(movie.getId()));
 
-        responseTrailers.enqueue(new Callback<Trailer>() {
-
-            @Override
-            public void onResponse(Call<Trailer> call, Response<Trailer> response) {
-
-
-                try {
-
-
-                    if (response.isSuccessful()) {
-                        Trailer trailers = response.body();
-                        //Log.d("RESPONSE BODY: ", response.body().getResults().listIterator().toString());
-
-                        for (final Result trailer : trailers.getResults()) {
-                            // Log.d("TRAILER KEY IN ARRAY: ", trailer.getKey());
-
+        responseTrailers.subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(responseTrailers -> {
+                    if (responseTrailers != null) {
+                        for (final Result trailer : responseTrailers.getResults()) {
+                             Log.d("TRAILER KEY IN ARRAY: ", trailer.getKey());
                             if (trailer.getKey() != null) {
                                 playButton.setVisibility(View.VISIBLE);
                                 playButton.setOnClickListener(new View.OnClickListener() {
                                     @Override
                                     public void onClick(View view) {
-                                        playTrailer( getResources().getString(R.string.video_base_url) + trailer.getKey());
+                                        playTrailer(getResources().getString(R.string.video_base_url) + trailer.getKey());
 
                                     }
                                 });
@@ -133,24 +125,8 @@ public class MovieActivity extends AppCompatActivity {
 
                         }
                     }
-                } catch (NullPointerException n) {
-                    n.printStackTrace();
-                    Toast.makeText(getApplicationContext(), "Sem Trailer disponível", Toast.LENGTH_SHORT).show();
-                }
+                });
 
-            }
-
-
-            @Override
-            public void onFailure(Call<Trailer> call, Throwable t) {
-
-                String error = t.getMessage();
-
-                Toast.makeText(MovieActivity.this, error, Toast.LENGTH_SHORT).show();
-
-            }
-
-        });
 
     }
 
@@ -159,6 +135,7 @@ public class MovieActivity extends AppCompatActivity {
 
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(base_url)
+                .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
@@ -169,7 +146,6 @@ public class MovieActivity extends AppCompatActivity {
 
     public void playTrailer(String uri) {
 
-
         if (!uri.equals("")) {
 
             uri = uri + "?autoplay=1&vq=small";
@@ -178,8 +154,8 @@ public class MovieActivity extends AppCompatActivity {
             startActivity(intent);
         }
 
-        }
     }
+}
 
 
 

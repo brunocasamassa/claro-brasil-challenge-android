@@ -1,7 +1,10 @@
 package studio.brunocasamassa.myapplication.utils;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 
 /**
  * Created by bruno on 28/09/2017
@@ -34,6 +37,17 @@ public class Tools {
 
         System.out.println("FREE MEMORY " + availHeapSizeInMB + " - USED MEMORY: " + usedMemInMB + " - MAX MEMORY " + maxHeapSizeInMB);
 
+
+    }
+
+    public static boolean verifyStatusConnection(Context context){
+        NetworkInfo info = (NetworkInfo) ((ConnectivityManager)
+                context.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
+
+        if (info == null) {
+            return false;
+
+        } else return true;
 
     }
 
